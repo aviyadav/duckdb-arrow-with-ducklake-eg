@@ -1,0 +1,20 @@
+[project]
+name = "building-a-better-ducklake"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb>=1.5.5",
+    "psutil>=7.2.2",
+    "ruff>=0.16.8",
+]
+
+[project.scripts]
+building-a-better-ducklake = "building_a_better_ducklake:main"
+run-medallion-pipeline = "building_a_better_ducklake.run_medallion_pipeline:record_execution"
+generate-raw-data = "building_a_better_ducklake.generate_raw_data:main"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"
