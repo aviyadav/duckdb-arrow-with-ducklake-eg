@@ -2,13 +2,9 @@
 
 > **Starting with a local Parquet file, then joining it to data stored in the cloud**
 
-**Author:** [Thomas Reid](https://towardsdatascience.com/author/thomas_reid/)  
-**Date:** September 17, 2026  
-**Reading Time:** 19 min read  
+
 **Original Article:** [https://towardsdatascience.com/building-a-data-lakehouse-with-duckdb-and-ducklake/](https://towardsdatascience.com/building-a-data-lakehouse-with-duckdb-and-ducklake/)
 
-![Image by AI](https://assets.insightmediagroup.io/media/wp-content/uploads/2026/08/Codex-Image-7-Aug-2026-21_16_18.png)
-*Image by AI*
 
 Many years ago, if you wanted to store large amounts of data that could be sensibly queried, a database like Oracle or Postgres and such was your main choice. Sure, there were other options like the mainframe systems from companies such as ICL and IBM, but they were very costly and locked you in to a specific manufacturer.
 
