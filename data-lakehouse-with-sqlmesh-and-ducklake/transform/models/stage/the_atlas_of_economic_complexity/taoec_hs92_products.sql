@@ -1,0 +1,50 @@
+MODEL (
+  name stage.taoec.hs92_products,
+  kind FULL,
+  column_descriptions (
+    product_id = 'Numeric product ID',
+    product_hs92_code = 'HS92 product code',
+    product_level = 'Level of the product in the classification hierarchy',
+    product_name = 'Product name',
+    product_name_short = 'Short product name',
+    product_id_hierarchy = 'Product hierarchy as a path of product IDs'
+  ),
+  audits (
+    not_null(columns := (
+      product_id, product_level, product_name, product_name_short,
+      product_id_hierarchy, show_feasibility, natural_resource
+    ))
+  )
+);
+
+SELECT
+    product_id,
+    product_hs92_code,
+    product_level,
+    product_name,
+    product_name_short,
+    product_parent_id,
+    product_id_hierarchy,
+    show_feasibility,
+    natural_resource,
+    green_product
+FROM read_csv(
+    @RAW__THE_ATLAS_OF_ECONOMIC_COMPLEXITY__CLASSIFICATIONS__PRODUCT_HS92,
+    delim = ',',
+    quote = '"',
+    escape = '"',
+    header = true,
+    nullstr = ['XXXX', 'XXXXXX', '', '9999AA'],
+    columns = {
+        product_id: USMALLINT,
+        product_hs92_code: UINTEGER,
+        product_level: UTINYINT,
+        product_name: VARCHAR,
+        product_name_short: VARCHAR,
+        product_parent_id: USMALLINT,
+        product_id_hierarchy: VARCHAR,
+        show_feasibility: BOOLEAN,
+        natural_resource: BOOLEAN,
+        green_product: BOOLEAN
+    }
+)

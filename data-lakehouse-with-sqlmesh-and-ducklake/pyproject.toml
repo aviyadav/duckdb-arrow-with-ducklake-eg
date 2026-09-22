@@ -1,0 +1,49 @@
+[project]
+name = "datalab"
+version = "1.1.0"
+description = "Tooling for a minimalist data lab running on top of DuckLake, backed by RustFS and PostgreSQL."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "anyascii>=0.3.3",
+  "boto3>=1.38.29",
+  "boto3-stubs[s3]>=1.38.29",
+  "click>=8.2.1",
+  "duckdb>=1.4.1",
+  "environs>=14.2.0",
+  "gitpython>=3.1.44",
+  "humanize>=4.12.3",
+  "inflection>=0.5.1",
+  "kagglehub>=0.3.12",
+  "loguru>=0.7.3",
+  "more-itertools>=10.7.0",
+  "platformdirs>=4.3.8",
+  "psycopg[binary]>=3.2.9",
+  "python-dotenv>=1.1.0",
+  "python-slugify>=8.0.4",
+  "requests-cache>=1.2.1",
+  "rust-just>=1.42.4",
+  "sqlmesh[duckdb]>=0.200.0",
+  "tqdm>=4.67.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]
+
+[project.scripts]
+dlctl = "dlctl.cli:dlctl"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
+
+[tool.pytest.ini_options]
+addopts = "--capture=no --maxfail=1 --disable-warnings"
+
+[tool.setuptools.packages.find]
+include = ["dlctl", "shared", "ingest", "transform", "export"]

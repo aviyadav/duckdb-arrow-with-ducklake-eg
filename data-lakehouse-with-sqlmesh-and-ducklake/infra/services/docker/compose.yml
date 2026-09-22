@@ -1,0 +1,53 @@
+services:
+  rustfs:
+    profiles:
+      - dev
+    image: rustfs/rustfs:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - RUSTFS_ACCESS_KEY=${S3_ACCESS_KEY_ID}
+      - RUSTFS_SECRET_KEY=${S3_SECRET_ACCESS_KEY}
+      - RUSTFS_ADDRESS=:9000
+      - RUSTFS_CONSOLE_ADDRESS=:9001
+      - RUSTFS_CONSOLE_ENABLE=true
+      - RUSTFS_OBS_LOGGER_LEVEL=error
+      - RUSTFS_OBS_LOG_DIRECTORY=/var/log/rustfs/
+    volumes:
+      - rustfs:/data
+      - rustfs-logs:/var/log/rustfs/
+    networks:
+      - rustfs
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:9000/health"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+    command: /data
+
+  postgres:
+    image: postgres:18.0
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${PSQL_CATALOG_USER}
+      POSTGRES_PASSWORD: ${PSQL_ROOT_PASSWORD}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${PSQL_CATALOG_USER}"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  rustfs:
+  rustfs-logs:
+  postgres:
+
+networks:
+  rustfs:
+  postgres:
