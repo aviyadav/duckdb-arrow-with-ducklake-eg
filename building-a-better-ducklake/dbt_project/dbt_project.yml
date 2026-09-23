@@ -1,0 +1,21 @@
+name: 'building_a_better_ducklake'
+version: '1.0.0'
+profile: 'building_a_better_ducklake'
+
+model-paths: ["models"]
+
+models:
+  building_a_better_ducklake:
+    +database: 'my_lake'
+
+    bronze:
+      +schema: 'bronze'
+      +materialized: 'table'
+
+    silver:
+      +schema: 'silver'
+      +materialized: 'table'
+
+    gold:
+      +schema: 'gold'
+      +materialized: 'table'

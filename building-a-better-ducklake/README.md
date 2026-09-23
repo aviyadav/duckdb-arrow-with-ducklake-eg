@@ -4,6 +4,11 @@ A small DuckDB/DuckLake medallion-pipeline project that demonstrates how raw,
 partitioned Parquet data can be ingested into Bronze, cleaned into Silver, and
 aggregated for Gold-layer analytics.
 
+The project supports two execution paths:
+
+- A Python/DuckDB runner that executes the SQL files in `sqls/`.
+- A dbt project in `dbt_project/` that models the same medallion flow with dbt.
+
 ## Requirements
 
 - Python 3.13 or newer
@@ -21,6 +26,15 @@ uv sync
 .
 ├── data/
 │   └── raw/                         # Hive-partitioned input Parquet files
+├── dbt_project/
+│   ├── dbt_project.yml              # dbt project configuration
+│   └── models/
+│       ├── bronze/
+│       │   └── bronze_vpc_flowlogs.sql
+│       ├── silver/
+│       │   └── silver_vpc_flowlogs.sql
+│       └── gold/
+│           └── monthly_traffic.sql
 ├── sqls/
 │   ├── bronze_layer.sql             # Raw Parquet ingestion
 │   ├── solver_layer.sql             # Silver cleansing and type conversion
@@ -63,6 +77,88 @@ uv run run-medallion-pipeline
 
 The runner reports elapsed wall-clock time and the process's final resident
 memory usage when the pipeline finishes.
+
+## dbt medallion pipeline
+
+The project also includes a dbt implementation of the medallion architecture
+under `dbt_project/`. It uses `dbt-duckdb` and attaches the DuckLake catalog as
+`my_lake`.
+
+The dbt models are organized by layer:
+
+- **Bronze** (`dbt_project/models/bronze/bronze_vpc_flowlogs.sql`)
+  - Reads the Hive-partitioned raw Parquet files from `data/raw`.
+  - Adds `_source_file` lineage metadata.
+  - Materialized as a view.
+
+- **Silver** (`dbt_project/models/silver/silver_vpc_flowlogs.sql`)
+  - Cleans and casts the Bronze records.
+  - Uses an incremental append strategy.
+  - Processes only partitions at or newer than the latest Silver partition.
+
+- **Gold** (`dbt_project/models/gold/monthly_traffic.sql`)
+  - Aggregates monthly flow counts, traffic volume, and packet volume.
+  - Materialized as a table.
+
+### dbt profile
+
+The dbt project expects a profile named `building_a_better_ducklake` in
+`~/.dbt/profiles.yml`. The profile should attach the DuckLake catalog, for
+example:
+
+```yaml
+building_a_better_ducklake:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ':memory:'
+      extensions:
+        - ducklake
+      attach:
+        - path: 'ducklake:/absolute/path/to/metadata.ducklake'
+          alias: my_lake
+          options:
+            data_path: '/absolute/path/to/data'
+            override_data_path: true
+      settings:
+        preserve_insertion_order: false
+        threads: 4
+```
+
+### Run dbt
+
+Run dbt commands from the `dbt_project/` directory.
+
+Validate the dbt configuration and DuckLake connection:
+
+```bash
+cd dbt_project
+uv run dbt debug
+```
+
+Build all Bronze, Silver, and Gold models:
+
+```bash
+cd dbt_project
+uv run dbt build
+```
+
+Run only one layer:
+
+```bash
+cd dbt_project
+uv run dbt run --select bronze
+uv run dbt run --select silver
+uv run dbt run --select gold
+```
+
+Run a full refresh of incremental models:
+
+```bash
+cd dbt_project
+uv run dbt run --full-refresh
+```
 
 ## Generate test data
 

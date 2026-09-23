@@ -1,0 +1,17 @@
+building_a_better_ducklake:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ':memory:'
+      extensions:
+        - ducklake
+      attach:
+        - path: 'ducklake:/home/avinash/codebase/python-base/building_a_better_ducklake/metadata.ducklake'
+          alias: my_lake
+          options:
+            data_path: '/home/avinash/codebase/python-base/building_a_better_ducklake/data'
+            override_data_path: true
+      settings:
+        preserve_insertion_order: false
+        threads: 4
