@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: stg_trips
+    description: "Staged Divvy trips with a computed ride_minutes column."
+    columns:
+      - name: ride_id
+        tests:
+          - unique
+          - not_null
+      - name: ride_minutes
+        description: "Ride duration in minutes."

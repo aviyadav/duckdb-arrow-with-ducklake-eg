@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Divvy data + persisted DuckDB database (large / generated)
+data/
+!data/.gitkeep
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Airflow
+airflow/logs/
+airflow/*.db
+
+# Env / secrets
+.env
+
+# dbt local user config (generated)
+dbt/.user.yml

@@ -1,0 +1,49 @@
+services:
+  gizmosql:
+    image: gizmodata/gizmosql:latest
+    container_name: gizmosql
+    init: true
+    tty: true
+    ports:
+      - "31337:31337"   # Arrow Flight SQL (client queries)
+      - "31338:31338"   # plaintext gRPC health check
+    environment:
+      GIZMOSQL_USERNAME: ${GIZMOSQL_USERNAME:-gizmosql_user}
+      GIZMOSQL_PASSWORD: ${GIZMOSQL_PASSWORD:-gizmosql_password}
+      SECRET_KEY: ${SECRET_KEY:-local-dev-only-secret-key-change-me}
+      TLS_ENABLED: "1"          # self-signed cert; clients use tls_skip_verify
+      PRINT_QUERIES: "1"        # echo queries to the container log
+      DATABASE_FILENAME: data/divvy.duckdb
+    volumes:
+      - ./data:/opt/gizmosql/data
+
+  airflow:
+    build: ./airflow
+    image: divvy-airflow:latest
+    container_name: airflow
+    command: standalone
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - gizmosql
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      AIRFLOW__API__PORT: "8080"
+      GIZMOSQL_HOST: gizmosql
+      GIZMOSQL_USERNAME: ${GIZMOSQL_USERNAME:-gizmosql_user}
+      GIZMOSQL_PASSWORD: ${GIZMOSQL_PASSWORD:-gizmosql_password}
+      AIRFLOW_CONN_GIZMOSQL_DEFAULT: >-
+        {"conn_type":"gizmosql","host":"gizmosql","port":31337,
+        "login":"${GIZMOSQL_USERNAME:-gizmosql_user}",
+        "password":"${GIZMOSQL_PASSWORD:-gizmosql_password}"}
+      DIVVY_DBT_DIR: /opt/airflow/divvy_dbt
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/divvy_dbt
+      - airflow_logs:/opt/airflow/logs
+
+volumes:
+  airflow_logs:

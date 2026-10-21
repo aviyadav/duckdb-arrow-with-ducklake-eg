@@ -1,0 +1,2 @@
+# dbt adapter for GizmoSQL is installed via pip (dbt-gizmosql); no hub packages.
+packages: []

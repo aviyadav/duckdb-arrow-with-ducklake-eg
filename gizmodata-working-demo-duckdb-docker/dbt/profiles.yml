@@ -1,0 +1,14 @@
+divvy:
+  target: dev
+  outputs:
+    dev:
+      type: gizmosql
+      host: "{{ env_var('GIZMOSQL_HOST', 'localhost') }}"
+      port: 31337
+      database: divvy
+      schema: main
+      user: "{{ env_var('GIZMOSQL_USERNAME', 'gizmosql_user') }}"
+      password: "{{ env_var('GIZMOSQL_PASSWORD') }}"
+      use_encryption: True
+      tls_skip_verify: True
+      threads: 4

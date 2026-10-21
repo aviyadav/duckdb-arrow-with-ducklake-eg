@@ -1,0 +1,4 @@
+# Optional extras used by the dbt project and the Iceberg/Delta check.
+dbt-core
+dbt-gizmosql        # dbt adapter for GizmoSQL over Arrow Flight SQL
+deltalake           # host-side Delta Lake writer for the Iceberg/Delta check

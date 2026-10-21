@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: divvy_raw
+    database: divvy
+    schema: main
+    tables:
+      - name: trips
+        description: "Raw Divvy trips (view over the CSV files in ./data)."
