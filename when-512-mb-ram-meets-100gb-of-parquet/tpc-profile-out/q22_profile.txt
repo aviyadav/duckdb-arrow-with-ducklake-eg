@@ -1,0 +1,109 @@
+╭─ Summary ──────────╮
+│ Total Time: 0.843s │
+│ Data Read: 23.0 MB │
+╰────────────────────╯
+╭─ Projection ─────────────────────────────╮
+│ Projections:                             │
+│ __internal_decompress_string(#0), #1, #2 │
+│ 7 rows                               0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Order By ──────────┴────────────────────╮
+│ Order By: cntrycode ASC                  │
+│ 7 rows                               0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections:                             │
+│ __internal_compress_string_uinteger(#0), │
+│ #1, #2                                   │
+│ 7 rows                               0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections:                             │
+│ __internal_decompress_string(#0), #1, #2 │
+│ 7 rows                               0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Hash Group By ─────┴────────────────────╮
+│ Groups: #0                               │
+│ Aggregates: count_star(), sum(#1)        │
+│ 7 rows                            30.0ms │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections: cntrycode, c_acctbal        │
+│ 636,749 rows                         0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections:                             │
+│ __internal_compress_string_uinteger(#0), │
+│ #1                                       │
+│ 636,749 rows                      60.0ms │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections: cntrycode, c_acctbal        │
+│ 636,749 rows                      20.0ms │
+╰─────────────────────┬────────────────────╯
+╭─ CTE ───────────────┴────────────────────╮
+│ CTE Name: __duckdb_delim_31              │
+│ Table Index: 31                          │
+│ Execution Mode: HYBRID_FANOUT            │
+│ Fanout Mode: DIRECT                      │
+│ Consumers: 1                             │
+│ Direct Consumers: 1                      │
+│ Buffered Consumers: 0                    │
+│ Chunk Storage: NONE                      │
+│ Order Mode: UNORDERED                    │
+│ Materialized Consumers: 1                │
+│ 0 rows                           100.0ms │
+╰─────────────────────┬────────────────────╯
+                      ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+╭─ Projection ────────┴────────────────────╮                                                                           ╭─ Projection ────────┴────────────────────╮
+│ Projections: #0, #1, #2                  │                                                                           │ Projections: #0, #1                      │
+│ 1,909,668 rows                       0µs │                                                                           │ 636,749 rows                         0µs │
+╰─────────────────────┬────────────────────╯                                                                           ╰─────────────────────┬────────────────────╯
+╭─ Nested Loop Join ──┴────────────────────╮                                                                           ╭─ Filter ────────────┴────────────────────╮
+│ Join Type: INNER                         │                                                                           │ Expression: NOT SUBQUERY                 │
+│ Conditions:                              │                                                                           │ 636,749 rows                      10.0ms │
+│ CAST(c_acctbal AS DOUBLE) > SUBQUERY     │                                                                           ╰─────────────────────┬────────────────────╯
+│ 1,909,668 rows                    60.0ms │                                                                           ╭─ Hash Join ─────────┴────────────────────╮
+╰─────────────────────┬────────────────────╯                                                                           │ Join Type: MARK                          │
+                      ├──────────────────────────────────────────────────────────────────────╮                         │ Conditions:                              │
+╭─ Filter ────────────┴────────────────────╮                          ╭─ Projection ─────────┴──────────────────────╮  │ c_custkey IS NOT DISTINCT FROM c_custkey │
+│ Expression: IN (...)                     │                          │ Projections:                                │  │ 1,909,668 rows                     4.38s │
+│ 4,201,381 rows                    40.0ms │                          │ "/"(CAST(#0 AS DOUBLE), CAST(#1 AS DOUBLE)) │  ╰─────────────────────┬────────────────────╯
+╰─────────────────────┒┎───────────────────╯                          │ 1 row                                   0µs │                        ├───────────────────────────────────────────┰┒
+╭─ Hash Join ─────────┚┖───────────────────╮                          ╰──────────────────────┬──────────────────────╯  ╭─ CTE Scan ──────────┴────────────────────╮  ╭─ Hash Join ───────┚┖──────────────────╮
+│ Join Type: MARK                          │                          ╭─ Ungrouped Aggregate ┴──────────────────────╮  │ CTE Index: 31                            │  │ Join Type: SEMI                       │
+│ Conditions:                              │                          │ Aggregates: sum(#0), count_star()           │  │ 1,909,668 rows                       0µs │  │ Conditions: o_custkey = c_custkey     │
+│ "substring"(c_phone, 1, 2) = #0          │                          │ 1 row                                10.0ms │  ╰──────────────────────────────────────────╯  │ 19,088,090 rows                 1.58s │
+│ 15,000,000 rows                  330.0ms │                          ╰──────────────────────┬──────────────────────╯                                                ╰───────────────────┰┰──────────────────╯
+╰─────────────────────┰┰───────────────────╯                          ╭─ Projection ─────────┴──────────────────────╮                                                                    ┃┠────────────────────────────────────────╮
+                      ┃┠─────────────────────────────────╮            │ Projections: c_acctbal                      │                                                ╭─ Table Scan ──────┚┖──────────────────╮  ╭─ Projection ─────┴─────────────────╮
+╭─ Table Scan ────────┚┖───────────────────╮  ╭─ Column Data Scan ─╮  │ 3,819,172 rows                          0µs │                                                │ Table: tpch_temp.main.orders          │  │ Projections: CAST(#0 AS BIGINT)    │
+│ Table: tpch_temp.main.customer           │  │ 7 rows         0µs │  ╰──────────────────────┬──────────────────────╯                                                │ Type: Sequential Scan                 │  │ 1,909,668 rows                 0µs │
+│ Type: Sequential Scan                    │  ╰────────────────────╯  ╭─ Filter ─────────────┴──────────────────────╮                                                │ Projections: o_custkey                │  ╰──────────────────┬─────────────────╯
+│ Projections: c_phone, c_acctbal,         │                          │ Expression: IN (...)                        │                                                │ Dynamic Filters:                      │  ╭─ Hash Group By ──┴─────────────────╮
+│              c_custkey                   │                          │ 3,819,172 rows                       40.0ms │                                                │ optional: o_custkey IN PRF(c_custkey) │  │ Groups: #0                         │
+│ Row Groups Scanned: 123 / 123            │                          ╰──────────────────────┒┎─────────────────────╯                                                │ Row Groups Scanned: 1222 / 1222       │  │ 1,909,668 rows             130.0ms │
+│ 15,000,000 rows                  310.0ms │                          ╭─ Hash Join ──────────┚┖─────────────────────╮                                                │ 19,088,090 rows                 2.81s │  ╰──────────────────┬─────────────────╯
+╰──────────────────────────────────────────╯                          │ Join Type: MARK                             │                                                ╰───────────────────────────────────────╯  ╭─ Projection ─────┴─────────────────╮
+                                                                      │ Conditions:                                 │                                                                                           │ Projections: #[0.2]                │
+                                                                      │ "substring"(c_phone, 1, 2) = #0             │                                                                                           │ 1,909,668 rows                 0µs │
+                                                                      │ 13,636,094 rows                     340.0ms │                                                                                           ╰──────────────────┬─────────────────╯
+                                                                      ╰──────────────────────┰┰─────────────────────╯                                                                                           ╭─ Projection ─────┴─────────────────╮
+                                                                                             ┃┠───────────────────────────────────╮                                                                             │ Projections: CAST(#0 AS INTEGER)   │
+                                                                      ╭─ Table Scan ─────────┚┖─────────────────────╮  ╭─ Column Data Scan ─╮                                                                   │ 1,909,668 rows                 0µs │
+                                                                      │ Table: tpch_temp.main.customer              │  │ 7 rows         0µs │                                                                   ╰──────────────────┬─────────────────╯
+                                                                      │ Type: Sequential Scan                       │  ╰────────────────────╯                                                                   ╭─ Projection ─────┴─────────────────╮
+                                                                      │ Projections: c_acctbal, c_phone             │                                                                                           │ Projections: #2                    │
+                                                                      │ Filters: c_acctbal > 0.00                   │                                                                                           │ 1,909,668 rows                 0µs │
+                                                                      │ Row Groups Scanned: 123 / 123               │                                                                                           ╰──────────────────┬─────────────────╯
+                                                                      │ 13,636,094 rows                       1.24s │                                                                                           ╭─ Filter ─────────┴─────────────────╮
+                                                                      ╰─────────────────────────────────────────────╯                                                                                           │ Expression:                        │
+                                                                                                                                                                                                                │ CAST(#[0.2] AS BIGINT) <= 14999999 │
+                                                                                                                                                                                                                │ 1,909,668 rows              10.0ms │
+                                                                                                                                                                                                                ╰──────────────────┬─────────────────╯
+                                                                                                                                                                                                                ╭─ CTE Scan ───────┴─────────────────╮
+                                                                                                                                                                                                                │ CTE Index: 31                      │
+                                                                                                                                                                                                                │ CTE Mode: DIRECT                   │
+                                                                                                                                                                                                                │ Consumer: 1                        │
+                                                                                                                                                                                                                │ 1,909,668 rows                 0µs │
+                                                                                                                                                                                                                ╰────────────────────────────────────╯

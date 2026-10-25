@@ -1,0 +1,93 @@
+╭─ Summary ───────────╮
+│ Total Time:   1.18s │
+│ Data Read: 221.2 MB │
+╰─────────────────────╯
+╭─ Projection ──────────────────────────╮
+│ Projections: avg_yearly               │
+│ 1 row                             0µs │
+╰───────────────────┬───────────────────╯
+╭─ Ungrouped Aggregate ─────────────────╮
+│ Aggregates: sum(#0)                   │
+│ 1 row                             0µs │
+╰───────────────────┬───────────────────╯
+╭─ Projection ──────┴───────────────────╮
+│ Projections: l_extendedprice          │
+│ 53,843 rows                       0µs │
+╰───────────────────┬───────────────────╯
+╭─ CTE ─────────────┴───────────────────╮
+│ CTE Name: __duckdb_delim_19           │
+│ Table Index: 19                       │
+│ Execution Mode: HYBRID_FANOUT         │
+│ Fanout Mode: DIRECT                   │
+│ Consumers: 1                          │
+│ Direct Consumers: 1                   │
+│ Buffered Consumers: 0                 │
+│ Chunk Storage: NONE                   │
+│ Order Mode: UNORDERED                 │
+│ Materialized Consumers: 1             │
+│ 0 rows                         40.0ms │
+╰───────────────────┰┰──────────────────╯
+                    ┃┠──────────────────────────────────────────────────────────────────────────────────╮
+╭─ Projection ──────┚┖──────────────────╮                                         ╭─ Projection ────────┴─────────────────────╮
+│ Projections: #1, #2, #0               │                                         │ Projections: #2                           │
+│ 600,982 rows                      0µs │                                         │ 53,843 rows                           0µs │
+╰───────────────────┒┎──────────────────╯                                         ╰─────────────────────┬─────────────────────╯
+╭─ Hash Join ───────┚┖──────────────────╮                                         ╭─ Hash Join ─────────┴─────────────────────╮
+│ Join Type: INNER                      │                                         │ Join Type: INNER                          │
+│ Conditions: l_partkey = p_partkey     │                                         │ Conditions:                               │
+│ 600,982 rows                    1.17s │                                         │ p_partkey IS NOT DISTINCT FROM p_partkey, │
+╰───────────────────┰┰──────────────────╯                                         │ SUBQUERY > CAST(l_quantity AS DOUBLE)     │
+                    ┃┠───────────────────────────────────────╮                    │ 53,843 rows                        30.0ms │
+╭─ Table Scan ──────┚┖──────────────────╮  ╭─ Table Scan ────┴─────────────────╮  ╰─────────────────────┬─────────────────────╯
+│ Table: tpch_temp.main.lineitem        │  │ Table: tpch_temp.main.part        │                        ├───────────────────────────────────┰┒
+│ Type: Sequential Scan                 │  │ Type: Sequential Scan             │  ╭─ Projection ────────┴─────────────────────╮  ╭─ CTE Scan ┖────────╮
+│ Projections: l_partkey, l_quantity,   │  │ Projections: p_partkey            │  │ Projections: 0.2 * avg(l_quantity),       │  │ CTE Index: 19      │
+│              l_extendedprice          │  │ Filters: p_brand = 'Brand#23',    │  │              p_partkey                    │  │ 600,982 rows   0µs │
+│ Dynamic Filters:                      │  │          p_container = 'MED BOX'  │  │ 20,031 rows                        10.0ms │  ╰────────────────────╯
+│ optional: l_partkey IN PRF(p_partkey) │  │ Row Groups Scanned: 164 / 164     │  ╰─────────────────────┬─────────────────────╯
+│ Row Groups Scanned: 4991 / 4992       │  │ 20,031 rows               210.0ms │  ╭─ Projection ────────┴─────────────────────╮
+│ 600,982 rows                   14.32s │  ╰───────────────────────────────────╯  │ Projections: CAST(#0 AS BIGINT), #1       │
+╰───────────────────────────────────────╯                                         │ 20,031 rows                           0µs │
+                                                                                  ╰─────────────────────┬─────────────────────╯
+                                                                                  ╭─ Hash Group By ─────┴─────────────────────╮
+                                                                                  │ Groups: #0                                │
+                                                                                  │ Aggregates: avg(#1)                       │
+                                                                                  │ 20,031 rows                        40.0ms │
+                                                                                  ╰─────────────────────┒┎────────────────────╯
+                                                                                  ╭─ Projection ────────┚┖────────────────────╮
+                                                                                  │ Projections: p_partkey, l_quantity        │
+                                                                                  │ 600,982 rows                          0µs │
+                                                                                  ╰─────────────────────┒┎────────────────────╯
+                                                                                  ╭─ Projection ────────┚┖────────────────────╮
+                                                                                  │ Projections: CAST(#0 AS INTEGER), #1      │
+                                                                                  │ 600,982 rows                          0µs │
+                                                                                  ╰─────────────────────┒┎────────────────────╯
+                                                                                  ╭─ Hash Join ─────────┚┖────────────────────╮
+                                                                                  │ Join Type: SEMI                           │
+                                                                                  │ Conditions: l_partkey = p_partkey         │
+                                                                                  │ 600,982 rows                      310.0ms │
+                                                                                  ╰─────────────────────┰┰────────────────────╯
+                                                                                                        ┃┠─────────────────────────────────────────╮
+                                                                                  ╭─ Table Scan ────────┚┖────────────────────╮  ╭─ Projection ────┴─────────────────╮
+                                                                                  │ Table: tpch_temp.main.lineitem            │  │ Projections: CAST(#0 AS BIGINT)   │
+                                                                                  │ Type: Sequential Scan                     │  │ 20,031 rows                   0µs │
+                                                                                  │ Projections: l_partkey, l_quantity        │  ╰─────────────────┬─────────────────╯
+                                                                                  │ Dynamic Filters:                          │  ╭─ Hash Group By ─┴─────────────────╮
+                                                                                  │ optional: l_partkey IN PRF(p_partkey)     │  │ Groups: #0                        │
+                                                                                  │ Row Groups Scanned: 4991 / 4992           │  │ 20,031 rows                30.0ms │
+                                                                                  │ 600,982 rows                        1.82s │  ╰─────────────────┒┎────────────────╯
+                                                                                  ╰───────────────────────────────────────────╯  ╭─ Projection ────┚┖────────────────╮
+                                                                                                                                 │ Projections: #[1.0]               │
+                                                                                                                                 │ 600,982 rows                  0µs │
+                                                                                                                                 ╰─────────────────┒┎────────────────╯
+                                                                                                                                 ╭─ Projection ────┚┖────────────────╮
+                                                                                                                                 │ Projections: #0, #1,              │
+                                                                                                                                 │              CAST(#2 AS INTEGER)  │
+                                                                                                                                 │ 600,982 rows                  0µs │
+                                                                                                                                 ╰─────────────────┒┎────────────────╯
+                                                                                                                                 ╭─ CTE Scan ──────┚┖────────────────╮
+                                                                                                                                 │ CTE Index: 19                     │
+                                                                                                                                 │ CTE Mode: DIRECT                  │
+                                                                                                                                 │ Consumer: 0                       │
+                                                                                                                                 │ 600,982 rows                  0µs │
+                                                                                                                                 ╰───────────────────────────────────╯

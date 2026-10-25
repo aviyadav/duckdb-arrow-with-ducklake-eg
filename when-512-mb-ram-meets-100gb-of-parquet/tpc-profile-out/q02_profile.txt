@@ -1,0 +1,87 @@
+╭─ Summary ───────────╮
+│ Total Time:  0.443s │
+│ Data Read: 478.9 MB │
+╰─────────────────────╯
+╭─ Projection ─────────────────────────────╮
+│ Projections:                             │
+│ #0, #1,                                  │
+│ __internal_decompress_string(#2),        │
+│ CAST(#3 AS BIGINT),                      │
+│ __internal_decompress_string(#4), #5,    │
+│ __internal_decompress_string(#6), #7     │
+│ 47,107 rows                          0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Order By ──────────┴────────────────────╮
+│ Order By: s_acctbal DESC, n_name ASC,    │
+│           s_name ASC, p_partkey ASC      │
+│ 47,107 rows                       30.0ms │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections:                             │
+│ #0, #1,                                  │
+│ __internal_compress_string_uhugeint(#2), │
+│ CAST(#3 AS INTEGER),                     │
+│ __internal_compress_string_uhugeint(#4), │
+│ #5,                                      │
+│ __internal_compress_string_uhugeint(#6), │
+│ #7                                       │
+│ 47,107 rows                          0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections: s_acctbal, s_name, n_name,  │
+│              p_partkey, p_mfgr,          │
+│              s_address, s_phone,         │
+│              s_comment                   │
+│ 47,107 rows                          0µs │
+╰─────────────────────┬────────────────────╯
+╭─ CTE ───────────────┴────────────────────╮
+│ CTE Name: __duckdb_delim_25              │
+│ Table Index: 25                          │
+│ Execution Mode: HYBRID_FANOUT            │
+│ Fanout Mode: DIRECT                      │
+│ Consumers: 1                             │
+│ Direct Consumers: 1                      │
+│ Buffered Consumers: 0                    │
+│ Chunk Storage: NONE                      │
+│ Order Mode: UNORDERED                    │
+│ Materialized Consumers: 1                │
+│ 0 rows                            60.0ms │
+╰─────────────────────┬────────────────────╯
+                      ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+╭─ Projection ────────┴────────────────────╮                                                                                                                                                                                                                       ╭─ Projection ────────┴─────────────────────╮
+│ Projections: #1, #2, #3, #4, #5, #6, #7, │                                                                                                                                                                                                                       │ Projections: #2, #3, #4, #5, #6, #7, #8,  │
+│              #0, #8                      │                                                                                                                                                                                                                       │              #9                           │
+│ 63,825 rows                          0µs │                                                                                                                                                                                                                       │ 47,107 rows                           0µs │
+╰─────────────────────┬────────────────────╯                                                                                                                                                                                                                       ╰─────────────────────┬─────────────────────╯
+╭─ Hash Join ─────────┴────────────────────╮                                                                                                                                                                                                                       ╭─ Hash Join ─────────┴─────────────────────╮
+│ Join Type: INNER                         │                                                                                                                                                                                                                       │ Join Type: INNER                          │
+│ Conditions: ps_suppkey = s_suppkey       │                                                                                                                                                                                                                       │ Conditions:                               │
+│ 63,825 rows                       40.0ms │                                                                                                                                                                                                                       │ p_partkey IS NOT DISTINCT FROM p_partkey, │
+╰─────────────────────┬────────────────────╯                                                                                                                                                                                                                       │ SUBQUERY = ps_supplycost                  │
+                      ├─────────────────────────────────────────────────────────────────────────────────────────────────────────────┰┒                                                                                                                             │ 47,107 rows                        30.0ms │
+╭─ Hash Join ─────────┴────────────────────╮                                         ╭─ Hash Join ──────────────────────────────────┚┖─────────────────────────────────────────────╮                                                                               ╰─────────────────────┬─────────────────────╯
+│ Join Type: INNER                         │                                         │ Join Type: INNER                                                                            │                                                                                                     ├──────────────────────────────────╮
+│ Conditions: ps_partkey = p_partkey       │                                         │ Conditions: s_nationkey = n_nationkey                                                       │                                                                               ╭─ Projection ────────┴─────────────────────╮  ╭─ CTE Scan ────────╮
+│ 63,825 rows                       80.0ms │                                         │ 200,535 rows                                                                            0µs │                                                                               │ Projections: CAST(#0 AS BIGINT), #1       │  │ CTE Index: 25     │
+╰─────────────────────┬────────────────────╯                                         ╰──────────────────────────────────────────────┰┰─────────────────────────────────────────────╯                                                                               │ 47,107 rows                           0µs │  │ 63,825 rows   0µs │
+                      ├─────────────────────────────────────────┒                                                                   ┃┠────────────────────────────────────────────────────────────────────╮                                                        ╰─────────────────────┬─────────────────────╯  ╰───────────────────╯
+╭─ Table Scan ────────┴────────────────────╮  ╭─ Table Scan ────┸─────────────────╮  ╭─ Table Scan ─────────────────────────────────┚┖─────────────────────────────────────────────╮  ╭─ Hash Join ───────┴───────────────────╮                                    ╭─ Hash Group By ─────┴─────────────────────╮
+│ Table: tpch_temp.main.partsupp           │  │ Table: tpch_temp.main.part        │  │ Table: tpch_temp.main.supplier                                                              │  │ Join Type: INNER                      │                                    │ Groups: #0                                │
+│ Type: Sequential Scan                    │  │ Type: Sequential Scan             │  │ Type: Sequential Scan                                                                       │  │ Conditions: n_regionkey = r_regionkey │                                    │ Aggregates: min(#1)                       │
+│ Projections: ps_partkey, ps_suppkey,     │  │ Projections: p_partkey, p_mfgr    │  │ Projections: s_suppkey, s_nationkey, s_acctbal, s_name, s_address, s_phone, s_comment       │  │ 5 rows                            0µs │                                    │ 47,107 rows                        20.0ms │
+│              ps_supplycost               │  │ Filters: p_size = 15,             │  │ Dynamic Filters:                                                                            │  ╰───────────────────┬───────────────────╯                                    ╰─────────────────────┬─────────────────────╯
+│ Dynamic Filters:                         │  │          suffix(p_type, 'BRASS')  │  │ optional: (s_nationkey IN (6, 7, 19, 22, 23)) AND optional: s_nationkey IN PRF(n_nationkey) │                      ├──────────────────────────────────────╮                 ╭─ Projection ────────┴─────────────────────╮
+│ optional: ps_partkey IN PRF(p_partkey),  │  │ Row Groups Scanned: 164 / 164     │  │ Row Groups Scanned: 9 / 9                                                                   │  ╭─ Table Scan ──────┴───────────────────╮  ╭─ Table Scan ──┴──────────────╮  │ Projections: #0, #7                       │
+│ optional: ps_suppkey IN PRF(s_suppkey)   │  │ 79,591 rows               970.0ms │  │ 200,535 rows                                                                        240.0ms │  │ Table: tpch_temp.main.nation          │  │ Table: tpch_temp.main.region │  │ 63,825 rows                           0µs │
+│ Row Groups Scanned: 656 / 656            │  ╰───────────────────────────────────╯  ╰─────────────────────────────────────────────────────────────────────────────────────────────╯  │ Type: Sequential Scan                 │  │ Type: Sequential Scan        │  ╰─────────────────────┬─────────────────────╯
+│ 63,825 rows                        2.99s │                                                                                                                                          │ Projections: n_nationkey,             │  │ Projections: r_regionkey     │  ╭─ Projection ────────┴─────────────────────╮
+╰──────────────────────────────────────────╯                                                                                                                                          │              n_regionkey, n_name      │  │ Filters: r_name = 'EUROPE'   │  │ Projections: CAST(#0 AS INTEGER), #1, #2, │
+                                                                                                                                                                                      │ Dynamic Filters: n_regionkey = 3      │  │ Row Groups Scanned: 1 / 1    │  │              #3, #4, #5, #6, #7, #8       │
+                                                                                                                                                                                      │ Row Groups Scanned: 1 / 1             │  │ 1 row                    0µs │  │ 63,825 rows                           0µs │
+                                                                                                                                                                                      │ 5 rows                            0µs │  ╰──────────────────────────────╯  ╰─────────────────────┬─────────────────────╯
+                                                                                                                                                                                      ╰───────────────────────────────────────╯                                    ╭─ CTE Scan ──────────┴─────────────────────╮
+                                                                                                                                                                                                                                                                   │ CTE Index: 25                             │
+                                                                                                                                                                                                                                                                   │ CTE Mode: DIRECT                          │
+                                                                                                                                                                                                                                                                   │ Consumer: 0                               │
+                                                                                                                                                                                                                                                                   │ 63,825 rows                           0µs │
+                                                                                                                                                                                                                                                                   ╰───────────────────────────────────────────╯

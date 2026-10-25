@@ -1,0 +1,110 @@
+╭─ Summary ──────────╮
+│ Total Time: 0.803s │
+│ Data Read: 43.7 MB │
+╰────────────────────╯
+╭─ Projection ─────────────────────────────╮
+│ Projections:                             │
+│ __internal_decompress_string(#0), #1,    │
+│ CAST(#2 AS INTEGER), #3                  │
+│ 27,840 rows                          0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Order By ──────────┴────────────────────╮
+│ Order By: supplier_cnt DESC,             │
+│           p_brand ASC, p_type ASC,       │
+│           p_size ASC                     │
+│ 27,840 rows                       10.0ms │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections:                             │
+│ __internal_compress_string_uhugeint(#0), │
+│ #1, CAST(#2 AS TINYINT), #3              │
+│ 27,840 rows                          0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Projection ────────┴────────────────────╮
+│ Projections:                             │
+│ __internal_decompress_string(#0), #1,    │
+│ CAST(#2 AS INTEGER), #3                  │
+│ 27,840 rows                          0µs │
+╰─────────────────────┬────────────────────╯
+╭─ Hash Group By ─────┴────────────────────╮
+│ Groups: #0, #1, #2                       │
+│ Aggregates: count_star()                 │
+│ 27,840 rows                      970.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Projection ────────┸────────────────────╮
+│ Projections: #0, #1, #2                  │
+│ 11,878,932 rows                      0µs │
+╰─────────────────────┰────────────────────╯
+╭─ Projection ────────┸────────────────────╮
+│ Projections:                             │
+│ __internal_compress_string_uhugeint(#0), │
+│ #1, CAST(#2 AS TINYINT)                  │
+│ 11,878,932 rows                   70.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Projection ────────┸────────────────────╮
+│ Projections:                             │
+│ __internal_decompress_string(#0), #1,    │
+│ CAST(#2 AS INTEGER)                      │
+│ 11,878,932 rows                   40.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Hash Group By ─────┸────────────────────╮
+│ Groups: #0, #1, #2, #3                   │
+│ 11,878,932 rows                    6.00s │
+╰─────────────────────┰────────────────────╯
+╭─ Projection ────────┸────────────────────╮
+│ Projections: p_brand, p_type, p_size,    │
+│              ps_suppkey                  │
+│ 11,881,344 rows                   10.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Projection ────────┸────────────────────╮
+│ Projections:                             │
+│ CAST(#0 AS INTEGER),                     │
+│ __internal_compress_string_uhugeint(#1), │
+│ #2, CAST(#3 AS TINYINT)                  │
+│ 11,881,344 rows                  130.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Projection ────────┸────────────────────╮
+│ Projections: #0, #1, #2, #3              │
+│ 11,881,344 rows                   10.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Filter ────────────┸────────────────────╮
+│ Expression: NOT SUBQUERY                 │
+│ 11,881,344 rows                   60.0ms │
+╰─────────────────────┰────────────────────╯
+╭─ Hash Join ─────────┸────────────────────╮
+│ Join Type: MARK                          │
+│ Conditions: ps_suppkey = #0              │
+│ 11,886,996 rows                  130.0ms │
+╰─────────────────────┬────────────────────╯
+                      ┟──────────────────────────────────────────────────────────────────────────────────────────────────────╮
+╭─ Hash Join ─────────┸────────────────────╮                                                             ╭─ Table Scan ──────┴──────────────────╮
+│ Join Type: INNER                         │                                                             │ Table: tpch_temp.main.supplier       │
+│ Conditions: ps_partkey = p_partkey       │                                                             │ Type: Sequential Scan                │
+│ 11,886,996 rows                    1.14s │                                                             │ Projections: s_suppkey               │
+╰─────────────────────┬────────────────────╯                                                             │ Filters:                             │
+                      ┟───────────────────────────────────────────────────╮                              │ s_comment ~~ '%Customer%Complaints%' │
+╭─ Table Scan ────────┸────────────────────╮  ╭─ Projection ──────────────┴───────────────────────────╮  │ Row Groups Scanned: 9 / 9            │
+│ Table: tpch_temp.main.partsupp           │  │ Projections: #0, #1, #2, #3                           │  │ 479 rows                     210.0ms │
+│ Type: Sequential Scan                    │  │ 2,971,749 rows                                    0µs │  ╰──────────────────────────────────────╯
+│ Projections: ps_partkey, ps_suppkey      │  ╰───────────────────────────┬───────────────────────────╯
+│ Dynamic Filters:                         │  ╭─ Filter ──────────────────┴───────────────────────────╮
+│ optional: ps_partkey IN PRF(p_partkey)   │  │ Expression: IN (...)                                  │
+│ Row Groups Scanned: 656 / 656            │  │ 2,971,749 rows                                 50.0ms │
+│ 11,886,996 rows                    1.61s │  ╰───────────────────────────┒┎──────────────────────────╯
+╰──────────────────────────────────────────╯  ╭─ Hash Join ───────────────┚┖──────────────────────────╮
+                                              │ Join Type: MARK                                       │
+                                              │ Conditions: p_size = #0                               │
+                                              │ 18,558,455 rows                               120.0ms │
+                                              ╰───────────────────────────┰┰──────────────────────────╯
+                                                                          ┃┠────────────────────────────────────────╮
+                                              ╭─ Table Scan ──────────────┚┖──────────────────────────╮  ╭─ Column Data Scan ─╮
+                                              │ Table: tpch_temp.main.part                            │  │ 8 rows         0µs │
+                                              │ Type: Sequential Scan                                 │  ╰────────────────────╯
+                                              │ Projections: p_partkey, p_brand, p_type, p_size       │
+                                              │ Filters:                                              │
+                                              │ p_brand != 'Brand#45',                                │
+                                              │ NOT prefix(p_type, 'MEDIUM POLISHED'),                │
+                                              │ optional: (p_size IN (3, 9, 14, 19, 23, 36, 45, 49))  │
+                                              │ Row Groups Scanned: 164 / 164                         │
+                                              │ 18,558,455 rows                               480.0ms │
+                                              ╰───────────────────────────────────────────────────────╯

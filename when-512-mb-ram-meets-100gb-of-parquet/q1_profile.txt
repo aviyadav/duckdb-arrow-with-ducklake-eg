@@ -1,0 +1,78 @@
+╭─ Summary ─────────╮
+│ Total Time: 2.84s │
+│ Data Read: 4.3 GB │
+╰───────────────────╯
+╭─ Projection ──────────────────────────────────╮
+│ Projections:                                  │
+│ __internal_decompress_string(#0),             │
+│ __internal_decompress_string(#1), #2, #3, #4, │
+│ #5, #6, #7, #8, #9                            │
+│ 4 rows                                    0µs │
+╰───────────────────────┬───────────────────────╯
+╭─ Order By ────────────┴───────────────────────╮
+│ Order By: l_returnflag ASC, l_linestatus ASC  │
+│ 4 rows                                 10.0ms │
+╰───────────────────────┬───────────────────────╯
+╭─ Projection ──────────┴───────────────────────╮
+│ Projections:                                  │
+│ __internal_compress_string_utinyint(#0),      │
+│ __internal_compress_string_utinyint(#1), #2,  │
+│ #3, #4, #5, #6, #7, #8, #9                    │
+│ 4 rows                                    0µs │
+╰───────────────────────┬───────────────────────╯
+╭─ Projection ──────────┴───────────────────────╮
+│ Projections:                                  │
+│ #0, #1, #2, #3, #4, #5,                       │
+│ "/"(CAST(#6 AS DOUBLE), CAST(#10 AS DOUBLE)), │
+│ "/"(CAST(#7 AS DOUBLE), CAST(#11 AS DOUBLE)), │
+│ "/"(CAST(#8 AS DOUBLE), CAST(#12 AS DOUBLE)), │
+│ #9                                            │
+│ 4 rows                                    0µs │
+╰───────────────────────┬───────────────────────╯
+╭─ Projection ──────────┴───────────────────────╮
+│ Projections:                                  │
+│ __internal_decompress_string(#0),             │
+│ __internal_decompress_string(#1), #2, #3, #4, │
+│ #5, #2, #3, #6, #7, #7, #7, #7                │
+│ 4 rows                                    0µs │
+╰───────────────────────┬───────────────────────╯
+╭─ Perfect Hash Group By ───────────────────────╮
+│ Groups: #0, #1                                │
+│ Aggregates: sum_no_overflow(#2),              │
+│             sum_no_overflow(#3),              │
+│             sum_no_overflow(#4), sum(#5),     │
+│             sum_no_overflow(#6), count_star() │
+│ 4 rows                                  2.70s │
+╰───────────────────────┒┎──────────────────────╯
+╭─ Projection ──────────┚┖──────────────────────╮
+│ Projections: l_returnflag, l_linestatus,      │
+│              l_quantity, l_extendedprice, #4, │
+│              #4 * (1.00 + l_tax), l_discount  │
+│ 591,599,349 rows                      520.0ms │
+╰───────────────────────┒┎──────────────────────╯
+╭─ Projection ──────────┚┖──────────────────────╮
+│ Projections:                                  │
+│ __internal_compress_string_utinyint(#0),      │
+│ __internal_compress_string_utinyint(#1), #2,  │
+│ #3, #4, #5, #6                                │
+│ 591,599,349 rows                      170.0ms │
+╰───────────────────────┒┎──────────────────────╯
+╭─ Projection ──────────┚┖──────────────────────╮
+│ Projections:                                  │
+│ l_returnflag, l_linestatus, l_quantity,       │
+│ l_extendedprice,                              │
+│ l_extendedprice * (1.00 - l_discount), l_tax, │
+│ l_discount                                    │
+│ 591,599,349 rows                      640.0ms │
+╰───────────────────────┒┎──────────────────────╯
+╭─ Table Scan ──────────┚┖──────────────────────╮
+│ Table: tpch_temp.main.lineitem                │
+│ Type: Sequential Scan                         │
+│ Projections: l_returnflag, l_linestatus,      │
+│              l_quantity, l_extendedprice,     │
+│              l_discount, l_tax                │
+│ Filters:                                      │
+│ l_shipdate <= '1998-09-02'::DATE              │
+│ Row Groups Scanned: 4992 / 4992               │
+│ 591,599,349 rows                       40.46s │
+╰───────────────────────────────────────────────╯

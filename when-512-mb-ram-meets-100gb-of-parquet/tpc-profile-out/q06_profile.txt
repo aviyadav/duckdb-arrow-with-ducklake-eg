@@ -1,0 +1,22 @@
+╭─ Summary ─────────╮
+│ Total Time: 1.56s │
+╰───────────────────╯
+╭─ Ungrouped Aggregate ─────────────────────────────────────────────────────╮
+│ Aggregates: sum_no_overflow(#0)                                           │
+│ 1 row                                                             140.0ms │
+╰─────────────────────────────────────┒┎────────────────────────────────────╯
+╭─ Projection ────────────────────────┚┖────────────────────────────────────╮
+│ Projections:                                                              │
+│ l_extendedprice * l_discount                                              │
+│ 11,421,368 rows                                                   410.0ms │
+╰─────────────────────────────────────┒┎────────────────────────────────────╯
+╭─ Table Scan ────────────────────────┚┖────────────────────────────────────╮
+│ Table: tpch_temp.main.lineitem                                            │
+│ Type: Sequential Scan                                                     │
+│ Projections: l_discount, l_extendedprice                                  │
+│ Filters:                                                                  │
+│ (l_shipdate >= '1994-01-01'::DATE) AND (l_shipdate < '1995-01-01'::DATE), │
+│ (l_discount >= 0.05) AND (l_discount <= 0.07), l_quantity < 24.00         │
+│ Row Groups Scanned: 4988 / 4992                                           │
+│ 11,421,368 rows                                                    23.91s │
+╰───────────────────────────────────────────────────────────────────────────╯

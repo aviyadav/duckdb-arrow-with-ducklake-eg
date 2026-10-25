@@ -28,6 +28,8 @@ then dissect the execution with detailed per-operator JSON profiling.
 ├── out_of_core_query.py              # Stage 3a: run Q3 under a 4GB cap, with profiling
 ├── using_file_system.py              # Stage 3b: run Q3 under a 512MB cap, monitor spill
 ├── json_profile.py                   # Stage 4: render profile_output.json as a tree
+├── q1_query_tree_duckdb.py           # Stage 5a: query_tree profile for a single query (Q1)
+├── all_query_trees_duckdb.py         # Stage 5b: all 22 TPC-H queries -> one profile each
 ├── pyproject.toml / uv.lock          # dependencies (uv-managed)
 ├── tpch_parquet_sf100/               # 23 GB — exported TPC-H tables (ZSTD Parquet)
 │   ├── lineitem.parquet              #   15 GB
@@ -41,7 +43,9 @@ then dissect the execution with detailed per-operator JSON profiling.
 ├── orders_partitioned/               # 3.8 GB — 4 files × ~950 MB (per-thread output)
 ├── tpch_temp.db                      # 28 GB — DuckDB catalog holding the generated SF100 tables
 ├── partition_temp.db                 # ~12 KB — scratch catalog used by the partitioning step
-└── profile_output.json               # detailed profile of the last profiled run
+├── profile_output.json               # detailed profile of the last profiled run
+├── tpc-h-sqls/                       # 22 raw TPC-H query templates (01.sql … 22.sql)
+└── tpc-profile-out/                  # 22 generated query_tree profiles (qNN_profile.txt)
 ```
 
 `tpch_temp.db` and `partition_temp.db` are intermediates and can be deleted once
@@ -99,6 +103,41 @@ The headline experiment. Same query and views, but:
 Parses `profile_output.json` and prints an indented operator tree with
 timings, plus memory/cardinality-related `extra_info` per node. Handles both
 the DuckDB 2.0 schema and the legacy format.
+
+### Stage 5 — `query_tree` profiles for all 22 TPC-H queries
+
+`q1_query_tree_duckdb.py` is the single-query prototype: it runs TPC-H Q1
+against `tpch_temp.db` with `PRAGMA enable_profiling='query_tree'` and writes
+the ASCII plan tree to `q1_profile.txt`.
+
+`all_query_trees_duckdb.py` generalises that to the whole benchmark:
+
+- Reads every `tpc-h-sqls/NN.sql`, runs it against the **same** `tpch_temp.db`
+  (the real SF100 tables — lineitem has 600M rows), and writes
+  `tpc-profile-out/qNN_profile.txt`.
+- The `.sql` files are **raw qgen templates**, not runnable SQL: parameters are
+  still placeholders (`:1`, `':2'`, `'%:3'`). The script substitutes the
+  standard TPC-H values (see the `SUBSTITUTIONS` table) and cleans up three
+  template artefacts DuckDB would reject:
+
+  | Artefact        | Where | Fix                                  |
+  | --------------- | ----- | ------------------------------------ |
+  | `day (3)`       | Q1    | interval precision stripped -> `day` |
+  | `:o`            | Q15   | qgen output directive line removed   |
+  | `revenue:s`     | Q15   | parameterised view name -> `revenue0`|
+
+- Q15 is the only multi-statement query (`CREATE VIEW` / `SELECT` /
+  `DROP VIEW`). Profiling is enabled **only** around the `SELECT`, so the
+  profile describes the query rather than the DDL, and the view is dropped
+  afterwards (leaving the database unchanged).
+- Failures don't abort the batch: each query is timed, errors are reported, and
+  a summary is printed at the end. Exit code is non-zero if any query failed.
+- Accepts optional query numbers to run a subset:
+  `python all_query_trees_duckdb.py 01 06 15`.
+
+Full run on this machine: **22/22 profiled, 0 failed**, ~100 s total. Slowest:
+Q10 (17.0s), Q14 (9.4s), Q13 (9.3s), Q18 (11.1s); fastest: Q11 (0.27s),
+Q02 (0.46s).
 
 ## The query
 
@@ -213,6 +252,7 @@ python partition_large_parquet_files.py  # → lineitem_partitioned/ + orders_pa
 python out_of_core_query.py              # 4 GB cap → prints timing, writes profile_output.json
 python using_file_system.py              # 512 MB cap → prints peak spill
 python json_profile.py                   # renders profile_output.json as a tree
+python all_query_trees_duckdb.py         # all 22 TPC-H queries -> tpc-profile-out/qNN_profile.txt
 ```
 
 ## Tuning knobs

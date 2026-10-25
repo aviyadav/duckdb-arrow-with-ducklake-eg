@@ -1,0 +1,84 @@
+╭─ Summary ──────────╮
+│ Total Time:  9.28s │
+│ Data Read: 25.4 MB │
+╰────────────────────╯
+╭─ Order By ────────────────────────╮
+│ Order By: custdist DESC,          │
+│           c_count DESC            │
+│ 45 rows                    10.0ms │
+╰─────────────────┬─────────────────╯
+╭─ Hash Group By ─┴─────────────────╮
+│ Groups: #0                        │
+│ Aggregates: count_star()          │
+│ 45 rows                    80.0ms │
+╰─────────────────┬─────────────────╯
+╭─ Projection ────┴─────────────────╮
+│ Projections: c_count              │
+│ 15,000,000 rows               0µs │
+╰─────────────────┬─────────────────╯
+╭─ Projection ────┴─────────────────╮
+│ Projections: CAST(#0 AS BIGINT)   │
+│ 15,000,000 rows            10.0ms │
+╰─────────────────┬─────────────────╯
+╭─ Projection ────┴─────────────────╮
+│ Projections: #1                   │
+│ 15,000,000 rows               0µs │
+╰─────────────────┬─────────────────╯
+╭─ Hash Group By ─┴─────────────────╮
+│ Groups: #0                        │
+│ Aggregates: sum(#1)               │
+│ 15,000,000 rows             4.64s │
+╰─────────────────┬─────────────────╯
+╭─ Projection ────┴─────────────────╮
+│ Projections: c_custkey,           │
+│              COALESCE(#1, 0)      │
+│ 15,000,000 rows            60.0ms │
+╰─────────────────┬─────────────────╯
+╭─ Projection ────┴─────────────────╮
+│ Projections: CAST(#0 AS INTEGER), │
+│              #1                   │
+│ 15,000,000 rows            10.0ms │
+╰─────────────────┬─────────────────╯
+╭─ Projection ────┴─────────────────╮
+│ Projections: CAST(#0 AS BIGINT),  │
+│              #1                   │
+│ 15,000,000 rows            10.0ms │
+╰─────────────────┬─────────────────╯
+╭─ Hash Join ─────┴─────────────────╮
+│ Join Type: LEFT                   │
+│ Conditions: c_custkey = #0        │
+│ 15,000,000 rows             4.10s │
+╰─────────────────┬─────────────────╯
+                  ├───────────────────────────────────────╮
+╭─ Projection ────┴─────────────────╮  ╭─ Projection ─────┴─────────────────╮
+│ Projections: CAST(#0 AS INTEGER)  │  │ Projections: CAST(#0 AS INTEGER),  │
+│ 15,000,000 rows            10.0ms │  │              #1                    │
+╰─────────────────┬─────────────────╯  │ 9,999,817 rows              10.0ms │
+╭─ Table Scan ────┴─────────────────╮  ╰──────────────────┬─────────────────╯
+│ Table: tpch_temp.main.customer    │  ╭─ Projection ─────┴─────────────────╮
+│ Type: Sequential Scan             │  │ Projections: CAST(#0 AS BIGINT),   │
+│ Projections: c_custkey            │  │              #1                    │
+│ Row Groups Scanned: 123 / 123     │  │ 9,999,817 rows              10.0ms │
+│ 15,000,000 rows            80.0ms │  ╰──────────────────┬─────────────────╯
+╰───────────────────────────────────╯  ╭─ Hash Group By ──┴─────────────────╮
+                                       │ Groups: #0                         │
+                                       │ Aggregates: count_star()           │
+                                       │ 9,999,817 rows              51.25s │
+                                       ╰──────────────────┒┎────────────────╯
+                                       ╭─ Projection ─────┚┖────────────────╮
+                                       │ Projections: o_custkey             │
+                                       │ 148,382,363 rows            20.0ms │
+                                       ╰──────────────────┒┎────────────────╯
+                                       ╭─ Projection ─────┚┖────────────────╮
+                                       │ Projections: CAST(#0 AS INTEGER)   │
+                                       │ 148,382,363 rows           190.0ms │
+                                       ╰──────────────────┒┎────────────────╯
+                                       ╭─ Table Scan ─────┚┖────────────────╮
+                                       │ Table: tpch_temp.main.orders       │
+                                       │ Type: Sequential Scan              │
+                                       │ Projections: o_custkey             │
+                                       │ Filters:                           │
+                                       │ o_comment !~~ '%special%requests%' │
+                                       │ Row Groups Scanned: 1222 / 1222    │
+                                       │ 148,382,363 rows            83.55s │
+                                       ╰────────────────────────────────────╯
