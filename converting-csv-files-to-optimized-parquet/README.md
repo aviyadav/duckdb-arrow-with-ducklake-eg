@@ -2,14 +2,15 @@
 
 A hands-on benchmark showing why **Parquet** beats raw **CSV** for analytical
 workloads. Using [DuckDB](https://duckdb.org/) and `psutil`, this project
-generates a large CSV dataset, converts it to a compressed Parquet file, and
-measures the time and peak memory of each approach.
+generates a large CSV dataset, converts it to Parquet (both ZSTD-compressed
+and uncompressed), and measures the time and peak memory of each approach.
 
 ## What it demonstrates
 
 - How to stream a 100M-row CSV into a compact Parquet file without loading it
   all into memory.
-- The performance difference between querying a raw CSV and a Parquet file.
+- The performance difference between querying a raw CSV, a ZSTD-compressed
+  Parquet file, and an uncompressed Parquet file.
 - Why **explicit typing** matters: with `all_varchar = true`, numeric columns
   become text and aggregations such as `SUM(revenue)` fail with a
   `BinderException`.
@@ -22,9 +23,10 @@ measures the time and peak memory of each approach.
 | --- | --- |
 | `generate_csv_data.py` | Generates `data/events.csv` (100M rows) using DuckDB's `generate_series`. |
 | `generate_csv_pyarrow.py` | Generates `data/events_py.csv` with the same shape using NumPy + PyArrow only (no DuckDB), in parallel batches with bounded memory. |
-| `convert_to_parquet.py` | Reads the CSV with explicit column types and writes `data/events.parquet` using ZSTD compression. Reports conversion time and peak memory. |
+| `convert_to_parquet.py` | Converts the CSV twice, writing `data/events_compressed.parquet` (ZSTD) and `data/events_uncompressed.parquet`, and prints a side-by-side report of conversion time, peak RSS, and file size. |
 | `auto_inferencing.py` | Runs a `GROUP BY country` aggregation on the CSV using DuckDB's default type auto-inference. Reports time and peak memory. |
 | `query_parquet_file.py` | Runs the same aggregation directly against the Parquet file. Reports time and peak memory. |
+| `test_speed.py` | Runs one filtered `GROUP BY country` aggregation against all three sources (CSV, ZSTD Parquet, uncompressed Parquet) from a single `main()` and prints a comparison summary table. |
 | `everything_varchar.py` | Forces every column to `VARCHAR` to show the error you get when summing text instead of numbers. |
 
 ## Dataset schema
@@ -44,7 +46,7 @@ The generated `events.csv` contains 100M rows with the following columns:
 
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (recommended) or `pip`
-- Dependencies: `duckdb` and `psutil`
+- Dependencies: `duckdb`, `numpy`, `psutil`, `pyarrow` (plus `ruff` for linting)
 
 ## Setup
 
@@ -55,7 +57,7 @@ uv sync
 Or with pip:
 
 ```sh
-pip install duckdb psutil
+pip install duckdb numpy psutil pyarrow
 ```
 
 ## Usage
@@ -70,12 +72,16 @@ uv run python generate_csv_data.py
 #    Or generate an equivalent file with NumPy + PyArrow instead of DuckDB
 uv run python generate_csv_pyarrow.py
 
-# 2. Convert the CSV to a compressed Parquet file (~950 MB)
+# 2. Convert the CSV to Parquet twice: ZSTD-compressed (~950 MB) and
+#    uncompressed (~3.6 GB). test_speed.py in step 3 expects both files.
 uv run python convert_to_parquet.py
 
 # 3. Query the CSV and the Parquet file to compare performance
 uv run python auto_inferencing.py
 uv run python query_parquet_file.py
+
+#    Or benchmark the CSV against both Parquet files in a single run
+uv run python test_speed.py
 
 # 4. See what happens when numeric columns are treated as text
 uv run python everything_varchar.py
@@ -101,28 +107,53 @@ constant even for hundreds of millions of rows.
 
 ## Sample output
 
-`convert_to_parquet.py` prints a summary like:
+`convert_to_parquet.py` prints a report like:
 
 ```
-==================================================
-CSV to Parquet Export Metrics (Explicit Typing):
-==================================================
-Total Conversion Time:   45.1234 seconds
-Peak Memory Usage:       612.34 MB
-Original CSV Size:       3785.60 MB
-Optimized Parquet Size:  945.71 MB
-==================================================
+Found source file: data/events.csv (3.70 GB)
+Starting benchmarks…
+
+Starting conversion to Parquet (ZSTD) from data/events.csv…
+Starting conversion to Parquet (UNCOMPRESSED) from data/events.csv…
+
+=======================================================
+ DUCKDB CONVERSION PERFORMANCE REPORT 
+=======================================================
+Metric                  | Compressed (ZSTD) | Uncompressed
+-------------------------------------------------------
+Time Elapsed            | 45.12 seconds | 18.34 seconds
+Peak Memory (RSS)       | 612.34 MB | 598.12 MB
+Output File Size        | 945.71 MB | 3612.88 MB
+=======================================================
 ```
 
 `auto_inferencing.py` and `query_parquet_file.py` print the query time and peak
 memory for the same `GROUP BY country` aggregation, so you can compare the two
 storage formats directly.
 
+`test_speed.py` runs the same filtered aggregation against all three sources in
+one process, prints each result table, and finishes with a summary:
+
+```
+==============================================================
+ - - Performance Summary - -
+==============================================================
+Source                     |   Time (s) |   Peak Memory (MB)
+--------------------------------------------------------------
+CSV                        |     1.4772 |               0.01
+Parquet (ZSTD)             |     0.2278 |               0.00
+Parquet (uncompressed)     |     0.1454 |               0.00
+==============================================================
+```
+
 ## Notes
 
-- Parquet output is written with **ZSTD** compression, which typically reduces
-  file size by ~4x compared with the raw CSV while also being columnar and
-  typed.
-- Peak memory is sampled every 5 ms by a daemon thread calling
+- `convert_to_parquet.py` writes two Parquet outputs: **ZSTD**-compressed
+  (typically ~4x smaller than the raw CSV) and uncompressed, so you can trade
+  conversion time and disk usage against query speed.
+- Most scripts sample peak memory every 5 ms from a daemon thread calling
   `psutil.Process().memory_info().rss`.
+- `test_speed.py` instead uses `tracemalloc`, which only tracks Python-level
+  allocations. DuckDB executes queries in C++, so its peak-memory column reads
+  near zero; the timing numbers are the meaningful output there.
 - Generated data in `data/` is not intended to be committed to version control.
