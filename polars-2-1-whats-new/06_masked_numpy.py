@@ -1,0 +1,16 @@
+# NumPy masked arrays to Polars nulls and back
+
+import time
+
+start = time.perf_counter()
+
+import numpy as np
+import polars as pl
+
+masked_tips = np.ma.array([3.75, 0.0, 3.0], mask=[False, True, False])
+tips = pl.Series("tip_amount", masked_tips)
+
+print(tips.to_list())
+print(repr(tips.to_numpy(masked=True)))
+
+print(f"time: {time.perf_counter() - start:.2f}s")
