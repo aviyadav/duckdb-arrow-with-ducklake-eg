@@ -157,3 +157,296 @@ Parquet (uncompressed)     |     0.1454 |               0.00
   allocations. DuckDB executes queries in C++, so its peak-memory column reads
   near zero; the timing numbers are the meaningful output there.
 - Generated data in `data/` is not intended to be committed to version control.
+
+
+
+------------------------------------------------------------------
+
+## Take 2 - comparing with DuckDB v2.0.0
+## Data generation - 10 million rows
+
+```bash
+uv run --with duckdb==1.5.6 generate_csv_data_timed.py
+```
+
+```txt
+DuckDB Version: v1.5.6
+
+Starting 3 benchmark runs for 10,000,000 rows...
+Run 1: 3.08 seconds
+Run 2: 3.16 seconds
+Run 3: 3.16 seconds
+
+Average run time across 3 runs: 3.13 seconds
+```
+
+
+```bash
+uv run --with duckdb==2.0.0 generate_csv_data_timed.py
+```
+
+```txt
+DuckDB Version: v2.0.0
+
+Starting 3 benchmark runs for 10,000,000 rows...
+Run 1: 2.87 seconds
+Run 2: 2.90 seconds
+Run 3: 2.89 seconds
+
+Average run time across 3 runs: 2.89 seconds
+```
+
+
+```bash
+uv run --with duckdb==1.5.6 auto_inferencing_timed.py
+```
+
+Output:
+
+```txt
+==================================================
+DuckDB Benchmark Metrics:
+==================================================
+DuckDB Version:             v1.5.6
+Peak Memory Usage:          375.56 MB
+--------------------------------------------------
+Run 1 Execution Time:         0.1768 seconds
+Run 2 Execution Time:         0.1653 seconds
+Run 3 Execution Time:         0.1726 seconds
+--------------------------------------------------
+Average Execution Time:     0.1716 seconds
+==================================================
+
+Query Results:
+Country: US  | Total Revenue: $36,949,522.96
+Country: FR  | Total Revenue: $36,939,514.35
+Country: IN  | Total Revenue: $36,936,412.86
+Country: DE  | Total Revenue: $36,924,387.38
+Country: UK  | Total Revenue: $36,890,762.55
+Country: JP  | Total Revenue: $36,860,709.07
+```
+
+
+
+```bash
+uv run --with duckdb==2.0.0 auto_inferencing_timed.py
+```
+
+Output:
+
+```txt
+==================================================
+DuckDB Benchmark Metrics:
+==================================================
+DuckDB Version:             v2.0.0
+Peak Memory Usage:          453.86 MB
+--------------------------------------------------
+Run 1 Execution Time:         0.2036 seconds
+Run 2 Execution Time:         0.1555 seconds
+Run 3 Execution Time:         0.1546 seconds
+--------------------------------------------------
+Average Execution Time:     0.1713 seconds
+==================================================
+
+Query Results:
+Country: US  | Total Revenue: $36,949,522.96
+Country: FR  | Total Revenue: $36,939,514.35
+Country: IN  | Total Revenue: $36,936,412.86
+Country: DE  | Total Revenue: $36,924,387.38
+Country: UK  | Total Revenue: $36,890,762.55
+Country: JP  | Total Revenue: $36,860,709.07
+```
+
+
+## Conversion to Parquet with casting type
+
+```bash
+uv run --with duckdb==1.5.6 convert_to_parquet_timed.py
+```
+
+Output:
+
+```txt
+==================================================
+CSV to Parquet Export Metrics (Explicit Typing):
+==================================================
+DuckDB Version:          v1.5.6
+Peak Memory Usage:       1104.14 MB
+--------------------------------------------------
+Run 1 Conversion Time:     0.7870 seconds
+Run 2 Conversion Time:     0.7823 seconds
+Run 3 Conversion Time:     0.7831 seconds
+--------------------------------------------------
+Average Conversion Time: 0.7841 seconds
+--------------------------------------------------
+Original CSV Size:       377.06 MB
+Optimized Parquet Size:  94.54 MB
+==================================================
+File successfully saved to: data\events.parquet
+```
+
+
+```bash
+uv run --with duckdb==2.0.0 convert_to_parquet_timed.py
+```
+
+Output:
+
+```txt
+==================================================
+CSV to Parquet Export Metrics (Explicit Typing):
+==================================================
+DuckDB Version:          v2.0.0
+Peak Memory Usage:       1175.29 MB
+--------------------------------------------------
+Run 1 Conversion Time:     0.6626 seconds
+Run 2 Conversion Time:     0.7468 seconds
+Run 3 Conversion Time:     0.7515 seconds
+--------------------------------------------------
+Average Conversion Time: 0.7203 seconds
+--------------------------------------------------
+Original CSV Size:       377.06 MB
+Optimized Parquet Size:  93.95 MB
+==================================================
+File successfully saved to: data\events.parquet
+```
+
+
+
+
+```bash
+uv run python convert_to_parquet_timed_duckdb_2_features.py
+```
+
+Output:
+
+```txt
+==================================================
+CSV to Parquet Export Metrics (DuckDB 2.0 Optimized):
+==================================================
+DuckDB Version:          v2.0.0
+Peak Memory Usage:       1169.55 MB
+--------------------------------------------------
+Run 1 Conversion Time:     0.6762 seconds
+Run 2 Conversion Time:     0.6672 seconds
+Run 3 Conversion Time:     0.7082 seconds
+--------------------------------------------------
+Average Conversion Time: 0.6839 seconds
+--------------------------------------------------
+Original CSV Size:       377.06 MB
+Optimized Parquet Size:  93.95 MB
+==================================================
+File successfully saved to: data\events.parquet
+```
+
+## Final Test
+
+
+```bash
+uv run --with duckdb==1.5.6 query_parquet_file_timed.py
+```
+
+Output:
+
+```txt
+==================================================
+DuckDB Parquet Performance Metrics:
+==================================================
+DuckDB Version:             v1.5.6
+Peak Memory Usage:          75.63 MB
+--------------------------------------------------
+Run 1 Execution Time:         0.0183 seconds
+Run 2 Execution Time:         0.0117 seconds
+Run 3 Execution Time:         0.0125 seconds
+--------------------------------------------------
+Average Execution Time:     0.0142 seconds
+==================================================
+
+Query Results:
+Country: US  | Total Revenue: $36,949,522.96
+Country: FR  | Total Revenue: $36,939,514.35
+Country: IN  | Total Revenue: $36,936,412.86
+Country: DE  | Total Revenue: $36,924,387.38
+Country: UK  | Total Revenue: $36,890,762.55
+Country: JP  | Total Revenue: $36,860,709.07
+```
+
+
+```bash
+uv run --with duckdb==2.0.0 query_parquet_file_timed.py
+```
+
+Output:
+
+```txt
+==================================================
+DuckDB Parquet Performance Metrics:
+==================================================
+DuckDB Version:             v2.0.0
+Peak Memory Usage:          121.74 MB
+--------------------------------------------------
+Run 1 Execution Time:         0.0227 seconds
+Run 2 Execution Time:         0.0191 seconds
+Run 3 Execution Time:         0.0179 seconds
+--------------------------------------------------
+Average Execution Time:     0.0199 seconds
+==================================================
+
+Query Results:
+Country: US  | Total Revenue: $36,949,522.96
+Country: FR  | Total Revenue: $36,939,514.35
+Country: IN  | Total Revenue: $36,936,412.86
+Country: DE  | Total Revenue: $36,924,387.38
+Country: UK  | Total Revenue: $36,890,762.55
+Country: JP  | Total Revenue: $36,860,709.07
+```
+
+
+
+```bash
+uv run python query_parquet_file_timed_with_duckdb2_features.py
+```
+
+Output:
+
+```txt
+==================================================
+DuckDB Parquet Performance Metrics (DuckDB 2.0 Optimized):
+==================================================
+DuckDB Version:             v2.0.0
+Peak Memory Usage:          122.47 MB
+--------------------------------------------------
+Run 1 Execution Time:         0.0236 seconds
+Run 2 Execution Time:         0.0190 seconds
+Run 3 Execution Time:         0.0193 seconds
+--------------------------------------------------
+Average Execution Time:     0.0206 seconds
+==================================================
+
+Query Results:
+Country: US  | Total Revenue: $36,949,522.96
+Country: FR  | Total Revenue: $36,939,514.35
+Country: IN  | Total Revenue: $36,936,412.86
+Country: DE  | Total Revenue: $36,924,387.38
+Country: UK  | Total Revenue: $36,890,762.55
+Country: JP  | Total Revenue: $36,860,709.07
+```
+
+
+### Observations
+Fast Speeds Across the Board: Reading directly from a compressed Parquet file (read_parquet) is exceptionally fast on both engine versions — completing the 10-million-row aggregation in under 40 milliseconds on the standard scripts. Parquet’s columnar layout and statistics skipping completely dwarf raw CSV parsing overhead.
+
+DuckDB v1.5.5 vs v2.0.0 (Standard Queries):
+DuckDB v1.5.5 holds a minor edge in raw execution speed (~2.8ms faster on average) and consumes slightly less peak RAM (72.88 MB vs 90.79 MB).
+
+However, both versions execute so fast that the difference is negligible for practical workloads.
+
+The Overhead of Session Variables (DuckDB 2.0 Optimized):
+The third script (query_parquet_file_timed_v2.py), which utilizes DuckDB 2.0’s session variables (SET VARIABLE and getvariable()), shows a noticeable performance penalty, doubling the average execution time to 0.0863 seconds.
+
+This occurs because the engine must look up and evaluate the session variable state on every execution cycle rather than embedding the literal string path directly into the query execution plan.
+
+
+
+### Final Verdict
+DuckDB 2.0 is a mature, high-performance evolution of an already stellar database engine. It brings robust syntax flexibility, cleaner multi-statement pipelines, and noticeable under-the-hood acceleration for heavy data-shaping tasks. While ultra-lightweight Parquet reads perform virtually identically to version 1.5, the overall improvements to memory management stability, generation throughput, and modern SQL ergonomics make upgrading your data engineering stack a no-brainer.

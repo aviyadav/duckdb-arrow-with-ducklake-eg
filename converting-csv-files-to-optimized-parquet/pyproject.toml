@@ -5,7 +5,7 @@ description = "Benchmark converting large CSV datasets to optimized Parquet with
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "duckdb>=1.5.5",
+    "duckdb>=2.0.0",
     "numpy>=2.5.3",
     "psutil>=7.2.2",
     "pyarrow>=25.0.1",
